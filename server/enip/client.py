@@ -1,18 +1,18 @@
 
-# 
+#
 # Cpppo -- Communication Protocol Python Parser and Originator
-# 
+#
 # Copyright (c) 2013, Hard Consulting Corporation.
-# 
+#
 # Cpppo is free software: you can redistribute it and/or modify it under the
 # terms of the GNU General Public License as published by the Free Software
 # Foundation, either version 3 of the License, or (at your option) any later
 # version.  See the LICENSE file at the top of the source tree.
-# 
+#
 # Cpppo is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
-# 
+#
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -354,7 +354,7 @@ class client( object ):
         blocking.  Raises StopIteration (cease iterating) on EOF between frames.  Any other
         Exception indicates a client failure, and should result in the client instance being
         discarded.
-        
+
         If no input is presently available, harvest any input immediately available; terminate on
         EOF.
 
@@ -363,9 +363,9 @@ class client( object ):
 
         """
         # Ensure that the caller has gained exclusive access to this client instance using:
-        # 
+        #
         #     with <instance>:
-        # 
+        #
         # So long as the caller retains exclusive access, they may continue to attempt to parse
         # a response.  They may *only* safely release exclusive access between fully parsed
         # EtherNet/IP frames (checked in __exit__, above)
@@ -380,7 +380,7 @@ class client( object ):
                 "EtherNet/IP-->%16s:%-5d rcvd %5d: %r",
                 self.addr[0], self.addr[1], len( rcvd ) if rcvd is not None else 0, rcvd )
             if rcvd is not None:
-                # Some input (or EOF); source is empty; chain the input and drop back into 
+                # Some input (or EOF); source is empty; chain the input and drop back into
                 # the framer engine.  It will detect a no-progress condition on EOF.
                 self.source.chain( rcvd )
             else:
@@ -398,7 +398,7 @@ class client( object ):
             if self.engine is None:
                 self.data	= cpppo.dotdict()
                 self.engine	= self.frame.run( source=self.source, data=self.data )
-                
+
             for mch,sta in self.engine:
                 if sta is None and self.source.peek() is None:
                     # Non-transition, and no input available; go get some -- all blocking is done
@@ -413,7 +413,7 @@ class client( object ):
             raise
         if self.frame.terminal:
             log.info( "EtherNet/IP   %16s:%-5d done: %s -> %10.10s; next byte %3d: %-10.10r: %r",
-                        self.addr[0], self.addr[1], self.frame.name_centered(), self.frame.current, 
+                        self.addr[0], self.addr[1], self.frame.name_centered(), self.frame.current,
                         self.source.sent, self.source.peek(), self.data )
             # Got an EtherNet/IP frame.  Return it (after parsing its payload.)
             self.engine		= None
@@ -661,7 +661,7 @@ def await( cli, timeout=None ):
                     continue # Client I/O pending w/in timeout; see if response complete
             # No input available w'in timeout.  A partially parsed response may remain
             # in 'cli', which may be continued 'til the cli is release
-                    
+
         break
     elapsed			= cpppo.timer() - begun
     return response,elapsed
@@ -907,21 +907,21 @@ class connector( client ):
             assert rpy_ctx == req_ctx, "Mismatched request/reply: %r vs. %r" % ( req_ctx, rpy_ctx )
             yield idx,dsc,req,rpy,sts,val
 
-    # 
+    #
     # synchronous
     # pipeline
-    # 
+    #
     #     The normal APIs for issuing transactions and harvesting the corresponding results.
-    # 
+    #
     #     The <value> yielded comes from the reply, hence there is a data list for reads, but no data
     # for writes (just a True).
     #
     #     None	-- Request failure
     #     True	-- Request successful write (no resultant data)
     #     [...]	-- Request successful read data
-    # 
+    #
     #     Use validate to post-process these results, to fill in data for reads (from the request).
-    # 
+    #
     def synchronous( self, operations, index=0, fragment=False, multiple=0, timeout=None ):
         """Issue the requested 'operations' synchronously.  Yield each harvested record.
 
@@ -949,7 +949,7 @@ class connector( client ):
                     raise StopIteration
             def next( self ):
                 return self.__next__()
-        
+
         issuer			= self.issue( operations=operations, index=index, fragment=fragment,
                                               multiple=multiple, timeout=timeout )
         inflight		= drainable()	# We iterate over this as we append to it...
@@ -1072,14 +1072,14 @@ class connector( client ):
                 print( line )
             yield index,descr,request,reply,status,val
 
-    # 
+    #
     # results
     # process
-    # 
+    #
     #     Simple, high-level API entry point that eliminates the need to process any yielded
     # sequences, and simply returns the number of (<failures>,<transactions>), optionally printing a
     # summary of I/O performed.
-    # 
+    #
     def results( self, operations, depth=0, multiple=0, fragment=False, printing=False, timeout=None ):
         """Process a sequence of I/O operations, yielding the results.  If a non-zero 'depth' is
         specified, then pipeline the requests allowing 'depth' outstanding transactions to be
@@ -1185,7 +1185,7 @@ provided.""" )
     assert 1 <= len( addr ) <= 2, "Invalid --address [<interface>]:[<port>}: %s" % args.address
     addr			= ( str( addr[0] ) if addr[0] else enip.address[0],
                                     int( addr[1] ) if len( addr ) > 1 and addr[1] else enip.address[1] )
-    
+
     # Set up logging level (-v...) and --log <file>
     levelmap 			= {
         0: logging.WARNING,
@@ -1194,7 +1194,7 @@ provided.""" )
         3: logging.INFO,
         4: logging.DEBUG,
         }
-    cpppo.log_cfg['level']	= ( levelmap[args.verbose] 
+    cpppo.log_cfg['level']	= ( levelmap[args.verbose]
                                     if args.verbose in levelmap
                                     else logging.DEBUG )
     if args.log:
@@ -1221,7 +1221,7 @@ provided.""" )
     with connector( host=addr[0], port=addr[1], timeout=timeout ) as connection:
         elapsed			= cpppo.timer() - begun
         log.detail( "Client Register Rcvd %7.3f/%7.3fs" % ( elapsed, timeout ))
-    
+
         # Issue Tag I/O operations, optionally printing a summary
         begun			= cpppo.timer()
         operations		= parse_operations( recycle( tags, times=repeat ))
@@ -1229,8 +1229,11 @@ provided.""" )
             operations=operations, depth=depth, multiple=multiple,
             fragment=fragment, printing=printing, timeout=timeout )
         elapsed			= cpppo.timer() - begun
-        log.normal( "Client Tag I/O  Average %7.3f TPS (%7.3fs ea)." % (
-            len( transactions ) / elapsed, elapsed / len( transactions )))
+        try:
+            log.normal( "Client Tag I/O  Average %7.3f TPS (%7.3fs ea)." % (
+                len( transactions ) / elapsed, elapsed / len( transactions )))
+        except TypeError:
+            log.warn("Unable to divide types")
 
     return 1 if failures else 0
 
